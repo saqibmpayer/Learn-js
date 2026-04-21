@@ -15,7 +15,8 @@ accountCity = "blr"
 
 console.table([accountId , accountEmail ,accountPassword , accountCity])
 
-
+// prefer not to use var because of 
+// block and functional scope
 
 
 
