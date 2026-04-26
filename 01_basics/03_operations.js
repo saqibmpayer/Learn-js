@@ -24,3 +24,5 @@ let negValue = -value;
 
 // console.log(num3++); 4
 
+// js calculates from left to right
+
