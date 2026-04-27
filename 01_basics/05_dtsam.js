@@ -24,3 +24,27 @@ let myfxn = function(){
     console.log("Hell0 world")
 }
 
+// +++++++++++++++++++++++++++++++++++++++++++
+
+// Stack(primitive) , Heap(Non Primitive) 
+
+let youtube = " official ";
+
+let anotheryoutube = youtube;
+console.log(anotheryoutube);
+
+anotheryoutube = " offficial change"
+console.log(anotheryoutube);
+console.log(youtube);
+
+
+let UserOne = {
+    name: 'saqib',
+    upiId: "aaa@ybl"
+}
+
+let Usertwo = UserOne;
+
+Usertwo.name= "name_changed"
+
+console.log(UserOne.name);

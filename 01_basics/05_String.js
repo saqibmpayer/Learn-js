@@ -35,6 +35,8 @@ console.log(newStringOne.trim());
 
 const url = "saqib%20manzoor"
 
-console.log(url.replace("%20","-"));
+// console.log(url.replace("%20","-"));
 
+// console.log(url.includes("saqib"));
 
+console.log(gameName.split("-"));
