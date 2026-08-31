@@ -1,200 +1,111 @@
-# JavaScript Deep-Dive Revision Notes
+# JavaScript Deep Dive
 
 ## 1. Object References
 
-Primitive values are compared by value:
+Objects are compared by reference, not by their content.
 
-const a = 10;
-const b = 10;
-
-console.log(a === b); // true
-
-Objects are compared by reference:
-
-const a = { x: 10 };
-const b = { x: 10 };
+```js
+const a = { name: "Alex" };
+const b = { name: "Alex" };
 
 console.log(a === b); // false
+```
 
-They are two different objects.
+Even though both objects have the same content, they are different objects.
+
+```text
+a ───→ Object #1
+b ───→ Object #2
+```
 
 But:
 
-const a = { x: 10 };
+```js
+const a = { name: "Alex" };
 const b = a;
 
 console.log(a === b); // true
+```
 
 Both variables point to the same object.
 
-### Key Rule
-
-> Primitive → compared by value  
-> Object → compared by reference
-
-
 ---
 
-# 2. `const` with Objects
+## 2. Hoisting
 
-`const` prevents reassignment of the variable.
+Hoisting is the JavaScript engine's behavior of processing declarations before executing the code.
 
-const user = {
-    name: "Alex"
-};
-
-This is NOT allowed:
-
-user = {}; // Error
-
-But modifying the object is allowed:
-
-user.name = "Bob";
-
-Why?
-
-Because the reference cannot change:
-
-user ─────→ Object #1
-
-But the contents of Object #1 can change.
-
-
----
-
-# 3. Hoisting
-
-Hoisting is the behavior where JavaScript processes declarations during the creation/setup phase of an execution context before executing the code.
-
-It does NOT literally move the code to the top.
-
-Example:
-
+```js
 console.log(x);
 
 var x = 10;
+```
 
 Output:
 
+```text
 undefined
+```
 
 Conceptually:
 
+```js
 var x;
 
 console.log(x);
 
 x = 10;
+```
 
-### Important
-
-> Hoisting is handled by the JavaScript engine through execution-context creation.
-
-
----
-
-# 4. `var`, `let`, and `const`
-
-## `var`
+### `var`
 
 `var` is function-scoped.
 
-function test() {
-    var x = 10;
-}
+### `let` and `const`
 
-console.log(x); // ReferenceError
-
-But it is not block-scoped:
-
-if (true) {
-    var x = 10;
-}
-
-console.log(x); // 10
-
-
-## `let`
-
-`let` is block-scoped.
-
-if (true) {
-    let x = 10;
-}
-
-console.log(x); // ReferenceError
-
-
-## `const`
-
-`const` is also block-scoped.
-
-if (true) {
-    const x = 10;
-}
-
-console.log(x); // ReferenceError
-
+`let` and `const` are block-scoped.
 
 ---
 
-# 5. Temporal Dead Zone (TDZ)
+## 3. Temporal Dead Zone (TDZ)
 
 `let` and `const` are hoisted, but they are not initialized immediately.
 
-Example:
-
+```js
 console.log(x);
 
 let x = 10;
+```
 
-Result:
+This gives:
 
+```text
 ReferenceError
+```
 
-The time between entering the scope and initializing `x` is called the:
+The period between entering the scope and reaching the declaration is called the **Temporal Dead Zone**.
 
-> Temporal Dead Zone (TDZ)
-
-Conceptually:
-
-Scope begins
-    ↓
+```text
+Scope starts
+     ↓
 x exists but is uninitialized
-    ↓
-TDZ
-    ↓
+     ↓
+     TDZ
+     ↓
 let x = 10
-    ↓
+     ↓
 x initialized
-
-
-### Important
-
-`var`:
-
-var x;
-console.log(x); // undefined
-
-`let`:
-
-console.log(x); // ReferenceError
-let x = 10;
-
+```
 
 ---
 
-# 6. Execution Context
+## 4. Execution Context
 
-JavaScript creates an execution context when executing code.
+Whenever JavaScript starts executing code, it creates an execution context.
 
-There is a:
+For example:
 
-- Global Execution Context
-- Function Execution Context
-
-Example:
-
+```js
 let x = 10;
 
 function test() {
@@ -202,27 +113,27 @@ function test() {
 }
 
 test();
+```
 
-Conceptually:
+There is a global execution context.
 
+When `test()` is called, a new function execution context is created.
+
+```text
 Global Execution Context
         ↓
-calls test()
+     test()
         ↓
 Function Execution Context
-
-
-Each function call gets its own execution context.
-
+```
 
 ---
 
-# 7. Lexical Environment
+## 5. Lexical Environment
 
-A lexical environment stores variables and has a connection to the outer environment.
+A lexical environment stores variables and has a reference to its outer environment.
 
-Example:
-
+```js
 let x = 10;
 
 function test() {
@@ -230,33 +141,30 @@ function test() {
 
     console.log(x);
 }
+```
 
-Conceptually:
+Inside `test`, JavaScript first looks for `x` locally.
 
+It doesn't find it, so it goes to the outer lexical environment.
+
+```text
 test Lexical Environment
-    |
-    ├── y → 20
-    |
-    └── outer
-          ↓
-    Global Lexical Environment
-          |
-          └── x → 10
-
-
-If JavaScript cannot find a variable locally, it searches outward.
-
+ ├── y → 20
+ │
+ └── outer
+       ↓
+Global Lexical Environment
+ └── x → 10
+```
 
 ---
 
-# 8. Closures
+## 6. Closures
 
-A closure happens when a function remembers/accesses variables from its surrounding lexical environment.
+A closure happens when a function remembers variables from its surrounding lexical environment.
 
-Example:
-
+```js
 function createCounter() {
-
     let count = 0;
 
     return function () {
@@ -270,42 +178,28 @@ const counter = createCounter();
 console.log(counter()); // 1
 console.log(counter()); // 2
 console.log(counter()); // 3
+```
 
+Even though `createCounter()` has finished executing, the returned function still has access to `count`.
 
-The inner function still has access to `count`.
-
-Conceptually:
-
-counter
-   ↓
-inner function
-   ↓
+```text
+counter function
+       ↓
 remembers
-   ↓
-createCounter lexical environment
-   ↓
+       ↓
+createCounter's lexical environment
+       ↓
 count
-
-
-### Important
-
-The execution context itself is not simply "alive forever".
-
-The important idea is:
-
-> The returned function keeps the lexical environment it needs reachable.
-
+```
 
 ---
 
-# 9. `this`
+## 7. `this`
 
 For a regular function, `this` depends mainly on how the function is called.
 
-Example:
-
+```js
 const user = {
-
     name: "Alex",
 
     greet() {
@@ -314,90 +208,59 @@ const user = {
 };
 
 user.greet();
+```
 
 Here:
 
+```text
 this → user
+```
 
-Output:
+So the output is:
 
+```text
 Alex
+```
 
+Remember:
 
-### Key Rule
-
-> For a regular function, look at how it is called to determine `this`.
-
-
----
-
-# 10. Method Call
-
-Example:
-
-const user = {
-
-    name: "Alex",
-
-    greet() {
-        console.log(this.name);
-    }
-};
-
-user.greet();
-
-The object before the dot becomes `this`:
-
-user.greet()
-    ↑
-    |
-  this
-
-
-So:
-
-this → user
-
+> For regular functions, look at the call to determine `this`.
 
 ---
 
-# 11. Arrow Functions and `this`
+## 8. Arrow Function `this`
 
-Arrow functions do not create their own `this`.
+Arrow functions do not have their own `this`.
 
-They inherit `this` from the surrounding lexical scope.
+They take `this` from their surrounding lexical scope.
 
-Example:
-
+```js
 const user = {
-
     name: "Alex",
 
     greet: () => {
         console.log(this.name);
     }
 };
+```
 
+This does not behave like a normal method.
 
-### Key Rule
+Remember:
 
-Regular function:
+> Regular function → `this` depends on the call.
 
-> `this` depends on the call.
-
-Arrow function:
-
-> `this` comes from the surrounding scope.
-
+> Arrow function → `this` comes from the surrounding scope.
 
 ---
 
-# 12. Prototype
+# Prototype Deep Dive
+
+## 9. Prototype
 
 A prototype is an object that another object can inherit properties and methods from.
 
-Example:
-
+```js
 const parent = {
     x: 10
 };
@@ -405,120 +268,90 @@ const parent = {
 const child = Object.create(parent);
 
 console.log(child.x); // 10
-
+```
 
 `child` does not have its own `x`.
 
-JavaScript looks at its prototype:
-
-child
- ↓
-parent
- └── x → 10
-
+JavaScript searches its prototype and finds `x`.
 
 ---
 
-# 13. `[[Prototype]]`
+## 10. `[[Prototype]]`
 
-`[[Prototype]]` is the internal prototype link of an object.
+`[[Prototype]]` is the internal link between an object and its prototype.
 
-Example:
-
+```text
 child
- ↓ [[Prototype]]
+  ↓ [[Prototype]]
 parent
- ↓ [[Prototype]]
+  ↓ [[Prototype]]
 Object.prototype
- ↓
+  ↓
 null
-
-
-When JavaScript doesn't find a property on an object, it follows this link.
-
+```
 
 ---
 
-# 14. `__proto__`
+## 11. `__proto__`
 
-`__proto__` allows access to an object's prototype.
+`__proto__` provides access to an object's prototype.
 
-Example:
-
+```js
 const parent = {};
 
 const child = Object.create(parent);
 
 console.log(child.__proto__ === parent); // true
+```
 
+Modern code usually prefers:
 
-Modern code generally prefers:
-
+```js
 Object.getPrototypeOf(child);
-
+```
 
 ---
 
-# 15. `.prototype` vs `[[Prototype]]`
+## 12. `.prototype` vs `[[Prototype]]`
 
-This is one of the MOST IMPORTANT concepts.
+This is one of the most important concepts.
 
-Given:
-
+```js
 function User() {}
+```
 
+Conceptually:
 
-There are two different relationships:
-
+```text
 User
- |
- ├── .prototype
- │       ↓
- │   User.prototype
+ ├── .prototype ─────→ User.prototype
  │
- └── [[Prototype]]
-         ↓
-    Function.prototype
+ └── [[Prototype]] ──→ Function.prototype
+```
 
+`.prototype` is a property.
 
-### `.prototype`
+`[[Prototype]]` is the internal inheritance link.
 
-`.prototype` is a property commonly found on constructor functions.
-
-Example:
-
-User.prototype
-
-
-### `[[Prototype]]`
-
-`[[Prototype]]` is the internal inheritance link of an object.
-
-
-### Remember
-
-> `.prototype` is a property.
-
-> `[[Prototype]]` is the inheritance link.
-
+They are NOT the same thing.
 
 ---
 
-# 16. Functions Are Objects
+## 13. Functions Are Objects
 
-Functions are callable, but they are also objects.
+Functions are objects too.
 
-Example:
-
+```js
 function User() {}
 
-User.name;
-User.length;
-User.prototype;
+console.log(User.name);
+console.log(User.length);
+console.log(User.prototype);
+```
 
+Therefore the function itself also has a prototype chain.
 
-The function itself has a prototype chain:
-
+```text
 User
  ↓ [[Prototype]]
 Function.prototype
@@ -526,16 +359,15 @@ Function.prototype
 Object.prototype
  ↓
 null
-
+```
 
 ---
 
-# 17. Prototype Chain
+## 14. Prototype Chain
 
-The prototype chain is the sequence JavaScript searches when looking for a property.
+When JavaScript cannot find a property on an object, it searches its prototype chain.
 
-Example:
-
+```js
 const grandParent = {
     x: 10
 };
@@ -547,10 +379,11 @@ parent.y = 20;
 const child = Object.create(parent);
 
 child.z = 30;
+```
 
+The chain:
 
-Chain:
-
+```text
 child
  ↓
 parent
@@ -560,21 +393,25 @@ grandParent
 Object.prototype
  ↓
 null
-
+```
 
 Therefore:
 
-child.x; // 10
-child.y; // 20
-child.z; // 30
-
+```js
+console.log(child.x); // 10
+console.log(child.y); // 20
+console.log(child.z); // 30
+```
 
 For:
 
+```js
 child.x
+```
 
 JavaScript searches:
 
+```text
 child
  ↓
 x found? No
@@ -586,21 +423,19 @@ x found? No
 grandParent
  ↓
 x found? Yes → 10
+```
 
-
-### Key Rule
+### Important rule
 
 > JavaScript stops at the first matching property.
 
-
 ---
 
-# 18. Property Shadowing
+## 15. Property Shadowing
 
-Shadowing occurs when an object has the same property as its prototype.
+If the child and parent have the same property, the child's property wins.
 
-Example:
-
+```js
 const parent = {
     name: "Parent"
 };
@@ -613,44 +448,29 @@ child.name = "Child";
 
 console.log(child.name);  // Child
 console.log(parent.name); // Parent
+```
 
+Conceptually:
 
-Now:
-
+```text
 child
  ├── name → "Child"
- |
+ │
  ↓ [[Prototype]]
 parent
  └── name → "Parent"
+```
 
-
-The child's property shadows the parent's property.
-
-
-### Important
-
-Reading:
-
-child.name
-
-searches the prototype chain.
-
-Assigning:
-
-child.name = "Child"
-
-creates/updates the property on `child`.
-
+The child's property **shadows** the parent's property.
 
 ---
 
-# 19. Prototype Method + `this`
+## 16. Methods and `this`
 
-Example:
+A method can be found on the prototype while `this` still refers to the object that called it.
 
+```js
 const parent = {
-
     name: "Parent",
 
     greet() {
@@ -663,101 +483,94 @@ const child = Object.create(parent);
 child.name = "Child";
 
 child.greet();
-
+```
 
 JavaScript finds `greet` here:
 
+```text
 child
  ↓
 parent
- └── greet
-
+ ↓
+greet found
+```
 
 But the call is:
 
+```js
 child.greet();
-
+```
 
 Therefore:
 
+```text
 this → child
+```
 
 Output:
 
+```text
 Child
-
-
-### Important
-
-> Where the method is found does NOT determine `this`.
-
-> How the method is called determines `this`.
-
+```
 
 ---
 
-# 20. `Object.create()`
+## 17. `Object.create()`
 
-Example:
-
-const parent = {
-    x: 10
-};
-
+```js
 const child = Object.create(parent);
+```
 
+creates a new object whose `[[Prototype]]` is `parent`.
 
-This creates:
-
+```text
 child
  ↓ [[Prototype]]
 parent
-
-
-It is a direct way to create prototype inheritance.
-
+```
 
 ---
 
-# 21. `Object.create(null)`
+## 18. `Object.create(null)`
 
-Example:
+You can create an object with no prototype.
 
+```js
 const obj = Object.create(null);
 
 obj.name = "Alex";
 
 console.log(obj.name);     // Alex
 console.log(obj.toString); // undefined
+```
 
+The chain is:
 
-Chain:
-
+```text
 obj
  ↓
 null
-
-
-There is no `Object.prototype`.
-
+```
 
 ---
 
-# 22. Constructor Functions
+# Constructor Functions
+
+## 19. Constructor Function
 
 Before classes, JavaScript commonly used constructor functions.
 
-Example:
-
+```js
 function User(name) {
     this.name = name;
 }
 
 const user = new User("Alex");
+```
 
+The instance's prototype becomes:
 
-The instance gets this prototype:
-
+```text
 user
  ↓ [[Prototype]]
 User.prototype
@@ -765,14 +578,15 @@ User.prototype
 Object.prototype
  ↓
 null
-
+```
 
 ---
 
-# 23. Prototype Methods
+## 20. Prototype Methods
 
 Methods can be stored on the prototype.
 
+```js
 function User(name) {
     this.name = name;
 }
@@ -781,38 +595,33 @@ User.prototype.sayHello = function () {
     console.log("Hello " + this.name);
 };
 
-
-Then:
-
 const a = new User("Alex");
 const b = new User("Bob");
+```
 
+Both instances share the same method.
 
-Both instances use the same function:
-
-a.sayHello === b.sayHello; // true
-
+```js
+console.log(a.sayHello === b.sayHello); // true
+```
 
 Conceptually:
 
+```text
 a ─────────┐
            ↓
      User.prototype
-           |
+           │
            └── sayHello → SAME FUNCTION
            ↑
 b ─────────┘
-
-
-This avoids creating a separate function for every object.
-
+```
 
 ---
 
-# 24. Prototype Inheritance
+## 21. Prototype Inheritance
 
-Example:
-
+```js
 function Animal(name) {
     this.name = name;
 }
@@ -820,7 +629,6 @@ function Animal(name) {
 Animal.prototype.speak = function () {
     console.log(this.name + " makes a sound");
 };
-
 
 function Dog(name) {
     this.name = name;
@@ -832,12 +640,12 @@ Dog.prototype.bark = function () {
     console.log("Woof!");
 };
 
-
 const dog = new Dog("Bruno");
+```
 
+The chain becomes:
 
-Chain:
-
+```text
 dog
  ↓
 Dog.prototype
@@ -847,186 +655,118 @@ Animal.prototype
 Object.prototype
  ↓
 null
-
+```
 
 Therefore:
 
+```js
 dog.bark();  // Woof!
 dog.speak(); // Bruno makes a sound
-
-
-For `dog.speak()`:
-
-dog
- ↓
-Dog.prototype
- ↓
-Animal.prototype
- └── speak → found
-
+```
 
 ---
 
-# 25. Method Overriding
+## 22. Method Overriding
 
-A child can define a method with the same name as the parent.
+A child can define its own method with the same name.
 
+```js
 Dog.prototype.speak = function () {
     console.log("Woof!");
 };
-
+```
 
 Now:
 
+```text
 dog
  ↓
 Dog.prototype
- └── speak() → Dog version
+ └── speak() ← found first
  ↓
 Animal.prototype
- └── speak() → Animal version
+ └── speak()
+```
 
+The Dog method wins because it is found first.
 
-The Dog version is found first.
-
-Therefore it is used.
-
+This is related to property shadowing.
 
 ---
 
-# 26. `constructor` Property
+## 23. `constructor` Property
 
 Normally:
 
+```js
 function Dog() {}
-
+```
 
 has:
 
+```js
 Dog.prototype.constructor === Dog; // true
-
+```
 
 Conceptually:
 
+```text
 Dog.prototype
- ├── constructor → Dog
+ └── constructor → Dog
+```
 
+But if we replace the prototype:
 
-But if we do:
-
+```js
 Dog.prototype = Object.create(Animal.prototype);
+```
 
-
-The new prototype doesn't have its own constructor.
+the new prototype does not have its own `constructor`.
 
 JavaScript searches upward:
 
+```text
 Dog.prototype
  ↓
 Animal.prototype
- └── constructor → Animal
-
+ ↓
+constructor → Animal
+```
 
 Therefore:
 
-Dog.prototype.constructor === Animal; // true
-
+```js
+console.log(Dog.prototype.constructor === Animal); // true
+```
 
 You can restore it:
 
+```js
 Dog.prototype.constructor = Dog;
+```
 
+Now:
 
-Then:
-
-Dog.prototype.constructor === Dog; // true
-
+```js
+console.log(Dog.prototype.constructor === Dog); // true
+```
 
 ### Important
 
-> `constructor` is just a property.
+`constructor` is just a property.
 
-It can be found through the prototype chain.
-
-It does NOT guarantee the actual object was created by that constructor.
-
+It does not guarantee that it tells you the actual function that created an object.
 
 ---
 
-# 27. Instance vs Function Prototype Chains
+# Classes
 
-Given:
+## 24. `class`
 
-function User() {}
+JavaScript classes are built on top of prototypes.
 
-const a = new User();
-
-
-## Instance `a`
-
-a
- ↓ [[Prototype]]
-User.prototype
- ↓
-Object.prototype
- ↓
-null
-
-
-## Function `User`
-
-User
- ↓ [[Prototype]]
-Function.prototype
- ↓
-Object.prototype
- ↓
-null
-
-
-These are different chains.
-
-
----
-
-# 28. `User.prototype` Is NOT `User`'s Prototype
-
-This is a classic JavaScript trap.
-
-function User() {}
-
-
-Conceptually:
-
-User
- |
- ├── .prototype ─────→ User.prototype
- |
- └── [[Prototype]] ──→ Function.prototype
-
-
-Therefore:
-
-User.prototype === Function.prototype; // false
-
-User.__proto__ === Function.prototype;  // true
-
-
-And:
-
-User.prototype.__proto__ === Object.prototype; // true
-
-
----
-
-# 29. `class`
-
-JavaScript classes are built on top of the prototype system.
-
-Example:
-
+```js
 class User {
-
     constructor(name) {
         this.name = name;
     }
@@ -1037,28 +777,28 @@ class User {
 }
 
 const user = new User("Alex");
+```
 
+The method is on:
 
-Conceptually:
+```text
+User.prototype
+```
 
+The instance connects to it:
+
+```text
 user
  ↓
 User.prototype
- ├── constructor
- └── sayHello
-
-
-The method is stored on the prototype.
-
+```
 
 ---
 
-# 30. Class Methods Are Shared
+## 25. Class Methods Are Shared
 
-Example:
-
+```js
 class User {
-
     sayHello() {
         console.log("Hello");
     }
@@ -1068,34 +808,31 @@ const a = new User();
 const b = new User();
 
 console.log(a.sayHello === b.sayHello); // true
+```
 
-
-Both objects use the same prototype method.
-
+The method is shared through the prototype.
 
 ---
 
-# 31. `extends`
+## 26. `extends`
 
-Example:
-
+```js
 class Animal {
-
     speak() {
         console.log("Animal sound");
     }
 }
 
 class Dog extends Animal {
-
     bark() {
         console.log("Woof");
     }
 }
-
+```
 
 Conceptually:
 
+```text
 Dog.prototype
  ↓
 Animal.prototype
@@ -1103,33 +840,31 @@ Animal.prototype
 Object.prototype
  ↓
 null
-
+```
 
 Therefore:
 
+```js
 const dog = new Dog();
 
 dog.bark();  // Woof
 dog.speak(); // Animal sound
-
+```
 
 ---
 
-# 32. `super`
+## 27. `super`
 
 `super` can access the parent implementation.
 
-Example:
-
+```js
 class Animal {
-
     speak() {
         console.log("animal");
     }
 }
 
 class Dog extends Animal {
-
     speak() {
         console.log("dog");
         super.speak();
@@ -1139,56 +874,54 @@ class Dog extends Animal {
 const d = new Dog();
 
 d.speak();
-
+```
 
 Output:
 
+```text
 dog
 animal
+```
 
+Execution:
 
-Why?
-
-The Dog method runs first:
-
-console.log("dog");
-
-
-Then:
-
-super.speak();
-
-
-calls the parent method:
-
-Animal.prototype.speak()
-
+```text
+d.speak()
+   ↓
+Dog.speak()
+   ↓
+"dog"
+   ↓
+super.speak()
+   ↓
+Animal.speak()
+   ↓
+"animal"
+```
 
 ---
 
-# 33. `super()` in Constructors
+## 28. `super()` in Constructors
 
 `super()` can call the parent constructor.
 
-Example:
-
+```js
 class Animal {
-
     constructor(name) {
         this.name = name;
     }
 }
 
 class Dog extends Animal {
-
     constructor(name) {
         super(name);
     }
 }
-
+```
 
 Execution:
 
+```text
 new Dog("Bruno")
       ↓
 Dog constructor
@@ -1198,183 +931,138 @@ super("Bruno")
 Animal constructor
       ↓
 this.name = "Bruno"
+```
 
+In a derived class constructor, you generally cannot use `this` before calling `super()`.
 
-In a derived constructor, you generally must call `super()` before using `this`.
+Incorrect:
 
+```js
+class Dog extends Animal {
+    constructor(name) {
+        this.name = name;
+        super(name);
+    }
+}
+```
 
 ---
 
-# 34. Complete Prototype Mental Model
+# Important Prototype Comparisons
 
-Remember these separately:
+Given:
 
-## Object
+```js
+function User() {}
 
-const a = {};
+const a = new User();
+```
 
+These are true:
 
-Stores properties.
+```js
+a.__proto__ === User.prototype;
 
+User.__proto__ === Function.prototype;
 
-## `[[Prototype]]`
+User.prototype.__proto__ === Object.prototype;
+```
 
-The object's internal inheritance link.
+But:
 
+```js
+User.prototype === Function.prototype; // false
+```
+
+---
+
+# Instance vs Function Prototype Chain
+
+## Instance
+
+```text
 a
- ↓
-Object.prototype
-
-
-## `.prototype`
-
-A property commonly found on constructor functions.
-
+ ↓ [[Prototype]]
 User.prototype
-
-
-Instances created using:
-
-new User()
-
-use:
-
-User.prototype
-
-
-## Prototype Chain
-
-The sequence created by following `[[Prototype]`]:
-
-instance
- ↓
-Constructor.prototype
- ↓
+ ↓ [[Prototype]]
 Object.prototype
  ↓
 null
+```
 
+## Constructor Function
 
----
+```text
+User
+ ↓ [[Prototype]]
+Function.prototype
+ ↓ [[Prototype]]
+Object.prototype
+ ↓
+null
+```
 
-# 35. Most Important Rules
-
-1. Functions are objects.
-
-2. `.prototype` is a property.
-
-3. `[[Prototype]]` is an internal inheritance link.
-
-4. JavaScript searches the prototype chain when a property isn't found.
-
-5. The first matching property wins.
-
-6. The prototype chain ends at `null`.
-
-7. For regular functions, `this` depends on how the function is called.
-
-8. `User.prototype` is NOT the same thing as `User.__proto__`.
-
-9. Classes are built on top of prototypes.
-
-10. `extends` creates inheritance between class prototypes.
-
-11. `super` allows access to parent behavior.
-
-12. Methods defined on a class are normally shared through the prototype.
-
+These are different chains.
 
 ---
 
-# 36. Quick Prototype Diagram
+# Final Mental Model
+
+Remember these four things:
+
+```text
+1. Object
+   ↓
+   Stores properties.
+
+2. [[Prototype]]
+   ↓
+   Internal inheritance link.
+
+3. .prototype
+   ↓
+   A property commonly found on constructor functions.
+
+4. Prototype chain
+   ↓
+   The chain JavaScript searches during property lookup.
+```
+
+The most important distinction:
+
+```text
+User.prototype
+      ≠
+User.[[Prototype]]
+```
 
 For:
 
+```js
 function User() {}
 
 const user = new User();
+```
 
+think:
 
-The instance:
-
-user
- ↓
-User.prototype
- ↓
-Object.prototype
- ↓
-null
-
-
-The function:
-
+```text
 User
- ↓
-Function.prototype
- ↓
-Object.prototype
- ↓
-null
-
-
-And:
-
-User
- |
- ├── .prototype → User.prototype
- |
- └── [[Prototype]] → Function.prototype
-
+ ├── .prototype ─────→ User.prototype
+ │                         ↑
+ │                         │
+ │                    user inherits
+ │
+ └── [[Prototype]] ──→ Function.prototype
+```
 
 ---
 
-# 37. JavaScript Topics Covered So Far
+# Next Topic: Asynchronous JavaScript
 
-- Object references
-- Primitive equality
-- `===`
-- `const`
-- Object mutation
-- Reassignment
-- Hoisting
-- `var`
-- `let`
-- `const`
-- Function scope
-- Block scope
-- TDZ
-- Execution context
-- Lexical environment
-- Closures
-- `this`
-- Regular functions
-- Arrow functions
-- Prototypes
-- `[[Prototype]]`
-- `__proto__`
-- `.prototype`
-- Prototype chain
-- Property lookup
-- Property shadowing
-- `Object.create()`
-- `Object.create(null)`
-- Constructor functions
-- `new`
-- Prototype methods
-- Prototype inheritance
-- Method overriding
-- `constructor`
-- Classes
-- `extends`
-- `super`
+The next section of the deep dive will be:
 
-
----
-
-# 38. Next Topic: Asynchronous JavaScript
-
-Next we move into:
-
+```text
 Synchronous JavaScript
         ↓
 Call Stack
@@ -1383,7 +1071,7 @@ JavaScript Runtime
         ↓
 Web APIs
         ↓
-Callback / Task Queue
+Task / Callback Queue
         ↓
 Event Loop
         ↓
@@ -1392,10 +1080,11 @@ Microtask Queue
 Promises
         ↓
 async / await
-
+```
 
 Starting example:
 
+```js
 console.log("A");
 
 setTimeout(() => {
@@ -1403,18 +1092,6 @@ setTimeout(() => {
 }, 0);
 
 console.log("C");
+```
 
-
-The goal is not just to memorize the output.
-
-We will understand exactly:
-
-- What goes into the Call Stack
-- What `setTimeout()` does
-- Why `0ms` does NOT mean "execute immediately"
-- What the Web APIs/runtime does
-- What the callback queue is
-- What the Event Loop does
-- Why Promise callbacks behave differently
-- Microtasks vs macrotasks/tasks
-- How `async/await` works
+The goal is to understand **why the output order happens**, not just memorize it.
